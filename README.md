@@ -1,6 +1,6 @@
 # convox/architect
 
-Build a Convox stack.
+Create CloudFormation stacks for hosting 12-factor applications.
 
 ## Usage
 
