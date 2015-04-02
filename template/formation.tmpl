@@ -2,6 +2,13 @@
   {
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Parameters" : {
+      {{ range .Processes }}
+        "{{ upper .Name }}Count": {
+          "Type" : "Number",
+          "Default" : "1",
+          "Description" : "Number of {{ .Name }} processes to run"
+        },
+      {{ end }}
       "AMI": {
         "Type" : "String",
         "Default" : "",
@@ -346,17 +353,16 @@
     "Type": "AWS::AutoScaling::AutoScalingGroup",
     "Properties" : {
       "LaunchConfigurationName" : { "Ref": "{{ upper .Name }}LaunchConfiguration" },
-      "AvailabilityZones": [ {{ array .AvailabilityZones }} ],
+      "AvailabilityZones": { "Ref": "AvailabilityZones" },
       "VPCZoneIdentifier": [ 
         { "Ref": "BaseSubnet0" },
         { "Ref": "BaseSubnet1" },
-        { "Ref": "BaseSubnet2" },
-        { "Ref": "BaseSubnet3" }
+        { "Ref": "BaseSubnet2" }
       ],
       "Cooldown": 5,
-      "DesiredCapacity": "{{ .Count }}",
-      "MinSize" : "1",
-      "MaxSize" : "3",
+      "DesiredCapacity": { "Ref": "{{ upper .Name }}Count" },
+      "MinSize" : { "Ref": "{{ upper .Name }}Count" },
+      "MaxSize" : { "Ref": "{{ upper .Name }}Count" },
       {{ if .Balancer }}
         "LoadBalancerNames": [ { "Ref": "{{ upper .Name }}Balancer" } ],
       {{ end }}
@@ -364,7 +370,11 @@
       "HealthCheckGracePeriod": 30,
       "MetricsCollection": [ { "Granularity": "1Minute" } ],
       "Tags": [
-        { "Key": "Name", "Value": "{{ .App }}-{{ .Name }}", "PropagateAtLaunch": true }
+        {
+          "Key": "Name",
+          "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "{{ .Name }}" ] ] },
+          "PropagateAtLaunch": true
+        }
       ]
     },
     "UpdatePolicy": {
@@ -393,8 +403,7 @@
       "Subnets": [
         { "Ref": "BaseSubnet0" },
         { "Ref": "BaseSubnet1" },
-        { "Ref": "BaseSubnet2" },
-        { "Ref": "BaseSubnet3" }
+        { "Ref": "BaseSubnet2" }
       ],
       "ConnectionDrainingPolicy": { "Enabled": true, "Timeout": 60 },
       "ConnectionSettings": { "IdleTimeout": 60 },
@@ -407,7 +416,7 @@
         "UnhealthyThreshold": "2"
       },
       "LBCookieStickinessPolicy": [{ "PolicyName": "affinity" }],
-      "LoadBalancerName": "{{ .App }}-{{ .Name }}",
+      "LoadBalancerName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "{{ .Name }}" ] ] },
       "Listeners": [
         { "Protocol": "HTTP", "LoadBalancerPort": "80", "InstanceProtocol": "HTTP", "InstancePort": "3000" }
       ],
@@ -447,7 +456,7 @@
               {
                 "Effect": "Allow",
                 "Action": [ "kinesis:PutRecords" ],
-                "Resource": [ "arn:aws:kinesis:*:*:stream/{{ .App }}-*" ]
+                "Resource": [ { "Fn::Join": [ "", [ "arn:aws:kinesis:*:*:stream/", { "Ref": "AWS::StackName" }, "-*" ] ] } ]
               },
               {
                 "Effect": "Allow",
@@ -475,39 +484,20 @@
     "Fn::Base64": {
       "Fn::Join": [ "\n", [
         "{",
-        "  \"app\": \"{{ .App }}\",",
+        { "Fn::Join": [ "", [ "  \"app\": \"", { "Ref": "AWS::StackName" }, "\"," ] ] },
         "  \"processes\": {",
         "    \"{{ .Name }}\": {",
-        "      \"env\": \"{{ .Env }}\",",
+        { "Fn::Join": [ "", [ "      \"env\": \"", { "Ref": "Environment" }, "\"," ] ] },
         "      \"logs\": {",
         { "Fn::Join": [ "", [ "        \"kinesis\": \"", { "Ref": "{{ upper .Name }}Kinesis" }, "\"" ] ] },
         { "Fn::Join": [ "", [ "        \"cloudwatch\": \"", { "Ref": "BaseLogGroup" }, "\"" ] ] },
         "      }",
-        "      \"ports\": [ {{ array .Ports }} ],",
+        "      \"ports\": [ ],",
         "      \"services\": {",
-        "        \"CONVOX_APP\": \"{{ .App }}\"
+        "        \"RUNTIME\": \"convox\"",
         "      }",
         "    }",
-        "  },",
-        { "Fn::Join": [ "", [ "    \"cwgroup\": \"", { "Ref": "BaseLogGroup" }, "\"," ] ] },
-        "    \"cwstream\": \"{{ .Name }}\",",
-        { "Fn::Join": [ "", [ "    \"kinesis\": \"", { "Ref": "{{ upper .Name }}Kinesis" }, "\"" ] ] },
-        "  },",
-        "  \"env\": [",
-        { 
-          "Fn::Join": [ "", [
-            "    \"",
-            {
-              "Fn::Join": [ "\",\n    \"", [
-                {{ safe .Env }}
-                "CONVOX_APP={{ .App }}"
-              ] ]
-            },
-            "\""
-          ] ]
-        },
-        "  ],",
-        "  \"ports\": [ {{ ports .Process.Ports }} ]",
+        "  }",
         "}"
       ] ]
     }

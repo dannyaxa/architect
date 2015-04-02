@@ -5,9 +5,10 @@ Create CloudFormation stacks for hosting 12-factor applications.
 ## Usage
 
     $ docker run convox/architect \
-      -processes web,worker
-      -service POSTGRES_URL=postgres://user:pass@example.org/db
-      -service REDIS_URL=redis://:pass@example.org/0
+      -processes web,worker                                     \
+      -balancers web                                            \
+      -service POSTGRES_URL=postgres://user:pass@example.org/db \
+      -service REDIS_URL=redis://:pass@example.org/0            \
 
 ## Userdata
 

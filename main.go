@@ -6,43 +6,47 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"os"
 	"strings"
 )
 
 var (
-	flagScale    StringSet
-	flagServices StringSet
+	flagBalancers string
+	flagProcesses string
+	flagServices  StringSet
 )
 
 func init() {
-	flagScale = StringSet{"web=1"}
-
-	flag.Var(&flagScale, "scale", "process concurrency (can specify multiple times)")
-	flag.Var(&flagServices, "service", "service env in KEY=value format (can specify multiple times)")
+	flag.StringVar(&flagBalancers, "balancers", "web", "processes that need a load balancer frontend")
+	flag.StringVar(&flagProcesses, "processes", "web", "processes associated with the app")
+	flag.Var(&flagServices, "service", "service env in KEY=value format")
 }
 
 func main() {
 	flag.Parse()
 
-	fmt.Printf("flagServices %+v\n", flagServices)
-	fmt.Printf("flag.Args() %+v\n", flag.Args())
+	params := map[string]interface{}{
+		"App":       nil,
+		"Processes": buildProcesses(parseList(flagProcesses), parseList(flagBalancers)),
+	}
 
-	data, err := buildTemplate("formation", "app", nil)
+	data, err := buildTemplate("formation", "app", params)
 
 	if err != nil {
-		fmt.Printf("err %+v\n", err)
+		fmt.Fprintf(os.Stderr, "error building json template: %s\n", err)
+		os.Exit(1)
 	}
 
 	pretty, err := prettyJson(data)
 
 	if err != nil {
-		printLines(data)
-		displaySyntaxError(data, err)
-		return
+		fmt.Fprintf(os.Stderr, "error building json template: %s\n", err)
+		// printLines(data)
+		// displaySyntaxError(data, err)
+		os.Exit(1)
 	}
 
-	fmt.Printf("pretty %+v\n", pretty)
-	fmt.Printf("err %+v\n", err)
+	fmt.Println(pretty)
 }
 
 func buildTemplate(name, section string, data interface{}) (string, error) {
@@ -81,6 +85,18 @@ func displaySyntaxError(data string, err error) {
 
 	fmt.Printf("Error in line %d: %s \n", line, err)
 	fmt.Printf("%s\n%s^\n", data[start:end], strings.Repeat(" ", pos))
+}
+
+func parseList(list string) []string {
+	parts := strings.Split(list, ",")
+
+	parsed := make([]string, len(parts))
+
+	for i, p := range parts {
+		parsed[i] = strings.TrimSpace(p)
+	}
+
+	return parsed
 }
 
 func prettyJson(raw string) (string, error) {
