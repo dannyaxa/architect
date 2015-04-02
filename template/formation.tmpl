@@ -26,7 +26,7 @@
         "Type" : "String",
         "Default" : "",
         "Description" : "Current Release"
-      },
+      }
     },
     "Mappings": {
       "Variables": {
@@ -42,9 +42,10 @@
       },
 
       {{ template "app-network" . }}
-      {{ template "app-infrastructure" . }}
 
       {{ range .Processes }} {{ template "process" . }} {{ end }}
+
+      {{ template "app-infrastructure" . }}
     },
     "Outputs": {
       "Processes": {
@@ -302,7 +303,7 @@
         "WriteCapacityUnits": "5"
       }
     }
-  },
+  }
 {{ end }}
 
 {{ define "process" }}

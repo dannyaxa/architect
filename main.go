@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
@@ -27,7 +28,20 @@ func main() {
 	fmt.Printf("flag.Args() %+v\n", flag.Args())
 
 	data, err := buildTemplate("formation", "app", nil)
-	fmt.Printf("data %+v\n", data)
+
+	if err != nil {
+		fmt.Printf("err %+v\n", err)
+	}
+
+	pretty, err := prettyJson(data)
+
+	if err != nil {
+		printLines(data)
+		displaySyntaxError(data, err)
+		return
+	}
+
+	fmt.Printf("pretty %+v\n", pretty)
 	fmt.Printf("err %+v\n", err)
 }
 
@@ -47,6 +61,52 @@ func buildTemplate(name, section string, data interface{}) (string, error) {
 	}
 
 	return formation.String(), nil
+}
+
+func displaySyntaxError(data string, err error) {
+	syntax, ok := err.(*json.SyntaxError)
+
+	if !ok {
+		fmt.Println(err)
+		return
+	}
+
+	start, end := strings.LastIndex(data[:syntax.Offset], "\n")+1, len(data)
+
+	if idx := strings.Index(data[start:], "\n"); idx >= 0 {
+		end = start + idx
+	}
+
+	line, pos := strings.Count(data[:start], "\n"), int(syntax.Offset)-start-1
+
+	fmt.Printf("Error in line %d: %s \n", line, err)
+	fmt.Printf("%s\n%s^\n", data[start:end], strings.Repeat(" ", pos))
+}
+
+func prettyJson(raw string) (string, error) {
+	var parsed map[string]interface{}
+
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		return "", err
+	}
+
+	bp, err := json.MarshalIndent(parsed, "", "  ")
+
+	if err != nil {
+		return "", err
+	}
+
+	clean := strings.Replace(string(bp), "\n\n", "\n", -1)
+
+	return clean, nil
+}
+
+func printLines(data string) {
+	lines := strings.Split(data, "\n")
+
+	for i, line := range lines {
+		fmt.Printf("%d: %s\n", i, line)
+	}
 }
 
 func templateHelpers() template.FuncMap {
