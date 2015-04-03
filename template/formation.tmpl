@@ -3,10 +3,15 @@
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Parameters" : {
       {{ range .Processes }}
-        "{{ upper .Name }}Count": {
+        "{{ upper .Name }}Scale": {
           "Type" : "Number",
           "Default" : "1",
           "Description" : "Number of {{ .Name }} processes to run"
+        },
+        "{{ upper .Name }}Command": {
+          "Type" : "String",
+          "Default" : "",
+          "Description" : "Override the default command for the {{ .Name }} process"
         },
       {{ end }}
       "AMI": {
@@ -33,11 +38,6 @@
         "Type" : "String",
         "Default" : "",
         "Description" : "Current Release"
-      }
-    },
-    "Mappings": {
-      "Variables": {
-        "Ami": { "Value": "{{ .Ami }}" }
       }
     },
     "Resources": {
@@ -341,7 +341,7 @@
       ],
       "EbsOptimized": false,
       "IamInstanceProfile": { "Ref": "{{ upper .Name }}InstanceProfile" },
-      "ImageId": { "Fn::FindInMap": [ "Variables", "Ami", "Value" ] },
+      "ImageId": { "Ref": "AMI" },
       "InstanceMonitoring": true,
       "InstanceType": "t2.micro",
       "KeyName": "production",
@@ -360,9 +360,9 @@
         { "Ref": "BaseSubnet2" }
       ],
       "Cooldown": 5,
-      "DesiredCapacity": { "Ref": "{{ upper .Name }}Count" },
-      "MinSize" : { "Ref": "{{ upper .Name }}Count" },
-      "MaxSize" : { "Ref": "{{ upper .Name }}Count" },
+      "DesiredCapacity": { "Ref": "{{ upper .Name }}Scale" },
+      "MinSize" : { "Ref": "{{ upper .Name }}Scale" },
+      "MaxSize" : { "Ref": "{{ upper .Name }}Scale" },
       {{ if .Balancer }}
         "LoadBalancerNames": [ { "Ref": "{{ upper .Name }}Balancer" } ],
       {{ end }}
