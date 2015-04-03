@@ -144,6 +144,15 @@ func templateHelpers() template.FuncMap {
 			}
 			return template.HTML(strings.Join(as, ","))
 		},
+		"processNames": func(pp []Process) string {
+			names := make([]string, len(pp))
+
+			for i, p := range pp {
+				names[i] = p.Name
+			}
+
+			return strings.Join(names, ",")
+		},
 		"safe": func(s string) template.HTML {
 			return template.HTML(s)
 		},

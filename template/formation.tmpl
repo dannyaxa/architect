@@ -56,7 +56,7 @@
     },
     "Outputs": {
       "Processes": {
-        "Value": "{{ join .ProcessNames "," }}"
+        "Value": "{{ processNames .Processes }}"
       },
 
       {{ range .Processes }} {{ template "process-output" . }} {{ end }} 

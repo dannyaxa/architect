@@ -26,5 +26,3 @@ func buildProcesses(processes, balancers []string) []Process {
 
 	return procs
 }
-
-type Processes []Process
