@@ -3,15 +3,20 @@
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Parameters" : {
       {{ range .Processes }}
-        "{{ upper .Name }}Scale": {
-          "Type" : "Number",
-          "Default" : "1",
-          "Description" : "Number of {{ .Name }} processes to run"
-        },
         "{{ upper .Name }}Command": {
           "Type" : "String",
           "Default" : "",
           "Description" : "Override the default command for the {{ .Name }} process"
+        },
+        "{{ upper .Name }}Ports": {
+          "Type" : "CommaDelimitedList",
+          "Default" : "",
+          "Description" : "Port mappings for {{ .Name }} process"
+        },
+        "{{ upper .Name }}Scale": {
+          "Type" : "Number",
+          "Default" : "1",
+          "Description" : "Number of {{ .Name }} processes to run"
         },
       {{ end }}
       "AMI": {
@@ -361,8 +366,8 @@
       ],
       "Cooldown": 5,
       "DesiredCapacity": { "Ref": "{{ upper .Name }}Scale" },
-      "MinSize" : { "Ref": "{{ upper .Name }}Scale" },
-      "MaxSize" : { "Ref": "{{ upper .Name }}Scale" },
+      "MinSize" : "1",
+      "MaxSize" : "10",
       {{ if .Balancer }}
         "LoadBalancerNames": [ { "Ref": "{{ upper .Name }}Balancer" } ],
       {{ end }}
@@ -485,18 +490,18 @@
       "Fn::Join": [ "\n", [
         "{",
         { "Fn::Join": [ "", [ "  \"app\": \"", { "Ref": "AWS::StackName" }, "\"," ] ] },
-        "  \"processes\": {",
-        "    \"{{ .Name }}\": {",
-        { "Fn::Join": [ "", [ "      \"env\": \"", { "Ref": "Environment" }, "\"," ] ] },
-        "      \"logs\": {",
-        { "Fn::Join": [ "", [ "        \"kinesis\": \"", { "Ref": "{{ upper .Name }}Kinesis" }, "\"," ] ] },
-        { "Fn::Join": [ "", [ "        \"cloudwatch\": \"", { "Ref": "BaseLogGroup" }, "\"" ] ] },
-        "      },",
-        "      \"ports\": [ ],",
-        "      \"services\": {",
-        "        \"RUNTIME\": \"convox\"",
-        "      }",
-        "    }",
+        "  \"process\": \"{{ .Name }}\",",
+        { "Fn::Join": [ "", [ "  \"command\": \"", { "Ref": "{{ upper .Name }}Command" }, "\"," ] ] },
+        { "Fn::Join": [ "", [ "  \"env\": \"", { "Ref": "Environment" }, "\"," ] ] },
+        "  \"logs\": {",
+        { "Fn::Join": [ "", [ "    \"kinesis\": \"", { "Ref": "{{ upper .Name }}Kinesis" }, "\"," ] ] },
+        { "Fn::Join": [ "", [ "    \"cloudwatch\": \"", { "Ref": "BaseLogGroup" }, "\"" ] ] },
+        "  },",
+        "  \"ports\": [",
+        { "Fn::Join": [ "", [ "    \"", { "Fn::Join": [ "\",\n    \"", { "Ref": "{{ upper .Name }}Ports" } ] }, "\"" ] ] },
+        "  ],",
+        "  \"services\": {",
+        "    \"RUNTIME\": \"convox\"",
         "  }",
         "}"
       ] ]

@@ -41,8 +41,8 @@ func main() {
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error building json template: %s\n", err)
-		// printLines(data)
-		// displaySyntaxError(data, err)
+		printLines(data)
+		displaySyntaxError(data, err)
 		os.Exit(1)
 	}
 
