@@ -27,6 +27,7 @@ The stack will also expect these parameters for each process type:
 | Name                | Description                                   |
 |---------------------|-----------------------------------------------|
 | `WebCommand`        | Override the default command for this process |
+| `WebPorts`          | Port mappings for this process                |
 | `WebScale`          | Number of instances of this process to run    |
 
 ## License
