@@ -1,6 +1,6 @@
 # convox/architect
 
-Create CloudFormation stacks for hosting 12-factor applications.
+Create CloudFormation stacks for hosting Convox applications.
 
 ## Usage
 
