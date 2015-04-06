@@ -4,11 +4,7 @@ Create CloudFormation stacks for hosting Convox applications.
 
 ## Usage
 
-    $ docker run convox/architect \
-      -processes web,worker                                     \
-      -balancers web                                            \
-      -service POSTGRES_URL=postgres://user:pass@example.org/db \
-      -service REDIS_URL=redis://:pass@example.org/0            \
+    $ docker run convox/architect -processes web,worker -balancers web
 
 ## Userdata
 
