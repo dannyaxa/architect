@@ -28,8 +28,8 @@ The stack will also expect these parameters for each process type:
 
 ## See Also
 
-* [convox/builder](convox/builder)
-* 
+* [convox/builder](https://github.com/convox/builder)
+
 ## License
 
 Apache 2.0 &copy; 2015 Convox, Inc.
