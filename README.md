@@ -6,7 +6,7 @@ Create a CloudFormation stack for a Convox application.
 
     $ docker run convox/architect -processes web,worker -balancers web
 
-## Userdata
+## Parameters
 
 The resulting stack will expect the following parameters:
 
