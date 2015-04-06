@@ -1,6 +1,6 @@
 # convox/architect
 
-Create CloudFormation stacks for hosting Convox applications.
+Create a CloudFormation stack for a Convox application.
 
 ## Usage
 
