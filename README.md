@@ -1,4 +1,4 @@
-# convox/architect
+# architect
 
 Create a CloudFormation stack for a Convox application.
 
