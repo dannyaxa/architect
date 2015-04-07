@@ -13,17 +13,26 @@ import (
 var (
 	flagBalancers string
 	flagProcesses string
-	flagServices  StringSet
 )
 
 func init() {
-	flag.StringVar(&flagBalancers, "balancers", "web", "processes that need a load balancer frontend")
-	flag.StringVar(&flagProcesses, "processes", "web", "processes associated with the app")
-	flag.Var(&flagServices, "service", "service env in KEY=value format")
+	flag.StringVar(&flagBalancers, "balancers", "", "processes that need a load balancer frontend")
+	flag.StringVar(&flagProcesses, "processes", "", "processes associated with the app")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "architect: create a cloudformation stack for a convox application\n\nUsage:\n")
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nExample:\n  architect -processes web,worker -balancers web >formation.json\n")
+	}
 }
 
 func main() {
 	flag.Parse()
+
+	if flagProcesses == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	params := map[string]interface{}{
 		"App":       nil,
