@@ -169,7 +169,8 @@
     "Properties": {
       "GroupDescription": "Instances",
       "SecurityGroupIngress": [
-        { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Ref": "AllowSSHFrom" } }
+        { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Ref": "AllowSSHFrom" } },
+        { "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535", "CidrIp": "10.0.0.0/8" }
       ],
       "VpcId": { "Ref": "BaseVpc" }
     }
