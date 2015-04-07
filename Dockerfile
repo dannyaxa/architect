@@ -1,6 +1,7 @@
 FROM gliderlabs/alpine:3.1
 
 RUN apk-install git go
+
 ENV GOPATH /go
 ENV GOBIN $GOPATH/bin
 ENV PATH $GOBIN:$PATH
