@@ -29,11 +29,6 @@ func init() {
 func main() {
 	flag.Parse()
 
-	if flagProcesses == "" {
-		flag.Usage()
-		os.Exit(1)
-	}
-
 	params := map[string]interface{}{
 		"App":       nil,
 		"Processes": buildProcesses(parseList(flagProcesses), parseList(flagBalancers)),
@@ -97,6 +92,10 @@ func displaySyntaxError(data string, err error) {
 }
 
 func parseList(list string) []string {
+	if list == "" {
+		return []string{}
+	}
+
 	parts := strings.Split(list, ",")
 
 	parsed := make([]string, len(parts))
