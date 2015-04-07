@@ -85,7 +85,7 @@
       "CidrBlock": "10.0.0.0/16",
       "InstanceTenancy": "default",
       "Tags": [
-        { "Key": "Name", "Value": "{{ .Name }}" }
+        { "Key": "Name", "Value": { "Ref": "AWS::StackName" } }
       ]
     }
   },
@@ -186,7 +186,7 @@
       },
       "Tags": [
         { "Key": "system", "Value": "convox" },
-        { "Key": "app", "Value": "{{ .Name }}" }
+        { "Key": "app", "Value": { "Ref": "AWS::StackName" } }
       ]
     }
   },
@@ -194,7 +194,7 @@
   "BaseDynamoBuilds": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
-      "TableName": "{{ .Name }}-builds",
+      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "builds" ] ] },
       "AttributeDefinitions": [
         { "AttributeName": "id", "AttributeType": "S" },
         { "AttributeName": "app", "AttributeType": "S" },
@@ -226,7 +226,7 @@
   "BaseDynamoEnv": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
-      "TableName": "{{ .Name }}-env",
+      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "env" ] ] },
       "AttributeDefinitions": [
         { "AttributeName": "name", "AttributeType": "S" }
       ],
@@ -242,7 +242,7 @@
   "BaseDynamoChanges": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
-      "TableName": "{{ .Name }}-changes",
+      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "changes" ] ] },
       "AttributeDefinitions": [
         { "AttributeName": "app", "AttributeType": "S" },
         { "AttributeName": "created", "AttributeType": "S" }
@@ -260,7 +260,7 @@
   "BaseDynamoProcesses": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
-      "TableName": "{{ .Name }}-processes",
+      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "processes" ] ] },
       "AttributeDefinitions": [
         { "AttributeName": "name", "AttributeType": "S" }
       ],
@@ -276,7 +276,7 @@
   "BaseDynamoReleases": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
-      "TableName": "{{ .Name }}-releases",
+      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "releases" ] ] },
       "AttributeDefinitions": [
         { "AttributeName": "id", "AttributeType": "S" },
         { "AttributeName": "app", "AttributeType": "S" },
@@ -308,7 +308,7 @@
   "BaseDynamoServices": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
-      "TableName": "{{ .Name }}-services",
+      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "services" ] ] },
       "AttributeDefinitions": [
         { "AttributeName": "name", "AttributeType": "S" }
       ],
