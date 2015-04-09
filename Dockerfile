@@ -11,6 +11,6 @@ RUN go get -u github.com/jteeuwen/go-bindata/...
 WORKDIR /go/src/github.com/convox/architect
 COPY . /go/src/github.com/convox/architect
 RUN go get .
-RUN go-bindata -o template.go template/
+RUN go-bindata template/
 
 ENTRYPOINT ["/go/bin/architect"]
