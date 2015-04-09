@@ -25,6 +25,7 @@ The stack will also expect these parameters for each process type:
 | `WebCommand`        | Override the default command for this process |
 | `WebPorts`          | Port mappings for this process                |
 | `WebScale`          | Number of instances of this process to run    |
+| `WebSize`           | Size of instance to run for process           |
 
 ## See Also
 

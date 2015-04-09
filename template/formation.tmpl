@@ -18,6 +18,11 @@
           "Default" : "1",
           "Description" : "Number of {{ .Name }} processes to run"
         },
+        "{{ upper .Name }}Size": {
+          "Type" : "String",
+          "Default" : "t2.micro",
+          "Description" : "Size of instance to use for {{ .Name} processes"
+        },
       {{ end }}
       "AMI": {
         "Type" : "String",
@@ -354,7 +359,7 @@
       "IamInstanceProfile": { "Ref": "{{ upper .Name }}InstanceProfile" },
       "ImageId": { "Ref": "AMI" },
       "InstanceMonitoring": true,
-      "InstanceType": "t2.micro",
+      "InstanceType": { "Ref": "{{ upper .Name }}Size" },
       "KeyName": "production",
       "SecurityGroups": [ { "Ref": "BaseSecurityGroup" } ],
       "UserData": {{ template "userdata" . }}
