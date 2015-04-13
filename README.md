@@ -16,7 +16,7 @@ The resulting stack will expect the following parameters:
 | `AllowSSHFrom`      | Allow SSH from this CIDR block                                             |
 | `AvailabilityZones` | A comma-delimited list of availability zones to use (specify 3)            |
 | `Environment`       | URL to an  environment for this app (`.env` format)                        |
-
+| `SSHKey`            | Key name for SSH access                                                    |
 
 The stack will also expect these parameters for each process type:
 

@@ -53,6 +53,10 @@
         "Type" : "String",
         "Default" : "",
         "Description" : "Source code repository"
+      },
+      "SSHKey": {
+        "Type": "AWS::EC2::KeyPair::KeyName",
+        "Description" : "Key name for SSH access"
       }
     },
     "Resources": {
@@ -360,7 +364,7 @@
       "ImageId": { "Ref": "AMI" },
       "InstanceMonitoring": true,
       "InstanceType": { "Ref": "{{ upper .Name }}Size" },
-      "KeyName": "production",
+      "KeyName": { "Ref": "SSHKey" },
       "SecurityGroups": [ { "Ref": "BaseSecurityGroup" } ],
       "UserData": {{ template "userdata" . }}
     }
