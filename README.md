@@ -10,13 +10,13 @@ Create a CloudFormation stack for a Convox application.
 
 The resulting stack will expect the following parameters:
 
-| Name                | Description                                                                |
-|---------------------|----------------------------------------------------------------------------|
-| `AMI`               | Application AMI. (See [convox/builder](https://github.com/convox/builder)) |
-| `AllowSSHFrom`      | Allow SSH from this CIDR block                                             |
-| `AvailabilityZones` | A comma-delimited list of availability zones to use (specify 3)            |
-| `Environment`       | URL to an  environment for this app (`.env` format)                        |
-| `SSHKey`            | Key name for SSH access                                                    |
+| Name                | Description                                                            |
+|---------------------|------------------------------------------------------------------------|
+| `AMI`               | Application AMI. (See [convox/build](https://github.com/convox/build)) |
+| `AllowSSHFrom`      | Allow SSH from this CIDR block                                         |
+| `AvailabilityZones` | A comma-delimited list of availability zones to use (specify 3)        |
+| `Environment`       | URL to an  environment for this app (`.env` format)                    |
+| `SSHKey`            | Key name for SSH access                                                |
 
 The stack will also expect these parameters for each process type:
 
@@ -29,7 +29,7 @@ The stack will also expect these parameters for each process type:
 
 ## See Also
 
-* [convox/builder](https://github.com/convox/builder)
+* [convox/build](https://github.com/convox/build)
 
 ## License
 
