@@ -438,7 +438,7 @@
       "LBCookieStickinessPolicy": [{ "PolicyName": "affinity" }],
       "LoadBalancerName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "{{ .Name }}" ] ] },
       "Listeners": [
-        { "Protocol": "HTTP", "LoadBalancerPort": "80", "InstanceProtocol": "HTTP", "InstancePort": "3000" }
+        { "Protocol": "TCP", "LoadBalancerPort": "80", "InstanceProtocol": "TCP", "InstancePort": "3000" }
       ],
       "SecurityGroups": [ { "Ref": "{{ upper .Name }}BalancerSecurityGroup" } ]
     }
