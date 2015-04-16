@@ -515,9 +515,9 @@
         "  \"ports\": [",
         { "Fn::Join": [ "", [ "    \"", { "Fn::Join": [ "\",\n    \"", { "Ref": "{{ upper .Name }}Ports" } ] }, "\"" ] ] },
         "  ],",
-        "  \"services\": {",
+        "  \"services\": [",
         "    \"RUNTIME=convox\"",
-        "  }",
+        "  ]",
         "}"
       ] ]
     }
