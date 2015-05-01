@@ -34,11 +34,6 @@
         "Default" : "0.0.0.0/0",
         "Description" : "Allow SSH From (CIDR notation)"
       },
-      "AvailabilityZones": {
-        "Type" : "CommaDelimitedList",
-        "Default" : "",
-        "Description" : "Availability Zones (specify 3)"
-      },
       "Environment" : {
         "Type" : "String",
         "Default" : "",
@@ -115,7 +110,7 @@
   "BaseSubnet0": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
-      "AvailabilityZone": { "Fn::Select": [ "0", { "Ref": "AvailabilityZones" } ] },
+      "AvailabilityZone": { "Fn::Select": [ "0", { "Fn::GetAZs": "" } ] },
       "CidrBlock": "10.0.1.0/24",
       "VpcId": { "Ref": "BaseVpc" }
     }
@@ -123,7 +118,7 @@
   "BaseSubnet1": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
-      "AvailabilityZone": { "Fn::Select": [ "1", { "Ref": "AvailabilityZones" } ] },
+      "AvailabilityZone": { "Fn::Select": [ "1", { "Fn::GetAZs": "" } ] },
       "CidrBlock": "10.0.2.0/24",
       "VpcId": { "Ref": "BaseVpc" }
     }
@@ -131,7 +126,7 @@
   "BaseSubnet2": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
-      "AvailabilityZone": { "Fn::Select": [ "2", { "Ref": "AvailabilityZones" } ] },
+      "AvailabilityZone": { "Fn::Select": [ "2", { "Fn::GetAZs": "" } ] },
       "CidrBlock": "10.0.3.0/24",
       "VpcId": { "Ref": "BaseVpc" }
     }
@@ -373,7 +368,11 @@
     "Type": "AWS::AutoScaling::AutoScalingGroup",
     "Properties" : {
       "LaunchConfigurationName" : { "Ref": "{{ upper .Name }}LaunchConfiguration" },
-      "AvailabilityZones": { "Ref": "AvailabilityZones" },
+      "AvailabilityZones": [
+        { "Fn::Select": [ 0, { "Fn::GetAZs": "" } ] },
+        { "Fn::Select": [ 1, { "Fn::GetAZs": "" } ] },
+        { "Fn::Select": [ 2, { "Fn::GetAZs": "" } ] }
+      ],
       "VPCZoneIdentifier": [ 
         { "Ref": "BaseSubnet0" },
         { "Ref": "BaseSubnet1" },
