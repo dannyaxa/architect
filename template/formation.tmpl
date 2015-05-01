@@ -50,9 +50,12 @@
         "Description" : "Source code repository"
       },
       "SSHKey": {
-        "Type": "AWS::EC2::KeyPair::KeyName",
+        "Type": "String",
         "Description" : "Key name for SSH access"
       }
+    },
+    "Conditions": {
+      "BlankSSHKey": { "Fn::Equals": [ { "Ref": "SSHKey" }, "" ] }
     },
     "Resources": {
       "BaseLogGroup": {
@@ -359,7 +362,7 @@
       "ImageId": { "Ref": "AMI" },
       "InstanceMonitoring": true,
       "InstanceType": { "Ref": "{{ upper .Name }}Size" },
-      "KeyName": { "Ref": "SSHKey" },
+      "KeyName": { "Fn::If": [ "BlankSSHKey", { "Ref": "AWS::NoValue" }, { "Ref": "SSHKey" } ] },
       "SecurityGroups": [ { "Ref": "BaseSecurityGroup" } ],
       "UserData": {{ template "userdata" . }}
     }
