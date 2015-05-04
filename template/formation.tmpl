@@ -231,22 +231,6 @@
       }
     }
   },
-  "DynamoEnv": {
-    "Type": "AWS::DynamoDB::Table",
-    "Properties": {
-      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "env" ] ] },
-      "AttributeDefinitions": [
-        { "AttributeName": "name", "AttributeType": "S" }
-      ],
-      "KeySchema": [
-        { "AttributeName": "name", "KeyType": "HASH" }
-      ],
-      "ProvisionedThroughput": {
-        "ReadCapacityUnits": "5",
-        "WriteCapacityUnits": "5"
-      }
-    }
-  },
   "DynamoChanges": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
@@ -258,22 +242,6 @@
       "KeySchema": [
         { "AttributeName": "app", "KeyType": "HASH" },
         { "AttributeName": "created", "KeyType": "RANGE" }
-      ],
-      "ProvisionedThroughput": {
-        "ReadCapacityUnits": "5",
-        "WriteCapacityUnits": "5"
-      }
-    }
-  },
-  "DynamoProcesses": {
-    "Type": "AWS::DynamoDB::Table",
-    "Properties": {
-      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "processes" ] ] },
-      "AttributeDefinitions": [
-        { "AttributeName": "name", "AttributeType": "S" }
-      ],
-      "KeySchema": [
-        { "AttributeName": "name", "KeyType": "HASH" }
       ],
       "ProvisionedThroughput": {
         "ReadCapacityUnits": "5",
@@ -307,22 +275,6 @@
           "WriteCapacityUnits": "5"
         }
       }],
-      "ProvisionedThroughput": {
-        "ReadCapacityUnits": "5",
-        "WriteCapacityUnits": "5"
-      }
-    }
-  },
-  "DynamoServices": {
-    "Type": "AWS::DynamoDB::Table",
-    "Properties": {
-      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "services" ] ] },
-      "AttributeDefinitions": [
-        { "AttributeName": "name", "AttributeType": "S" }
-      ],
-      "KeySchema": [
-        { "AttributeName": "name", "KeyType": "HASH" }
-      ],
       "ProvisionedThroughput": {
         "ReadCapacityUnits": "5",
         "WriteCapacityUnits": "5"
