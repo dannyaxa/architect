@@ -58,7 +58,7 @@
       "BlankSSHKey": { "Fn::Equals": [ { "Ref": "SSHKey" }, "" ] }
     },
     "Resources": {
-      "BaseLogGroup": {
+      "LogGroup": {
         "Type": "AWS::Logs::LogGroup",
         "Properties": {
           "RetentionInDays": 7
@@ -78,15 +78,15 @@
 
       {{ range .Processes }} {{ template "process-output" . }} {{ end }} 
 
-      "BaseSecurityGroup": {
-        "Value": { "Ref": "BaseSecurityGroup" }
+      "SecurityGroup": {
+        "Value": { "Ref": "SecurityGroup" }
       }
     }
   }
 {{ end }}
 
 {{ define "app-network" }}
-  "BaseVpc": {
+  "Vpc": {
     "Type": "AWS::EC2::VPC",
     "Properties": {
       "CidrBlock": "10.0.0.0/16",
@@ -97,81 +97,81 @@
     }
   },
 
-  "BaseGateway": {
+  "Gateway": {
     "Type": "AWS::EC2::InternetGateway",
     "Properties": {
     }
   },
-  "BaseGatewayAttachment": {
+  "GatewayAttachment": {
     "Type": "AWS::EC2::VPCGatewayAttachment",
     "Properties": {
-      "InternetGatewayId": { "Ref": "BaseGateway" },
-      "VpcId": { "Ref": "BaseVpc" }
+      "InternetGatewayId": { "Ref": "Gateway" },
+      "VpcId": { "Ref": "Vpc" }
     }
   },
 
-  "BaseSubnet0": {
+  "Subnet0": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
       "AvailabilityZone": { "Fn::Select": [ "0", { "Fn::GetAZs": "" } ] },
       "CidrBlock": "10.0.1.0/24",
-      "VpcId": { "Ref": "BaseVpc" }
+      "VpcId": { "Ref": "Vpc" }
     }
   },
-  "BaseSubnet1": {
+  "Subnet1": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
       "AvailabilityZone": { "Fn::Select": [ "1", { "Fn::GetAZs": "" } ] },
       "CidrBlock": "10.0.2.0/24",
-      "VpcId": { "Ref": "BaseVpc" }
+      "VpcId": { "Ref": "Vpc" }
     }
   },
-  "BaseSubnet2": {
+  "Subnet2": {
     "Type": "AWS::EC2::Subnet",
     "Properties": {
       "AvailabilityZone": { "Fn::Select": [ "2", { "Fn::GetAZs": "" } ] },
       "CidrBlock": "10.0.3.0/24",
-      "VpcId": { "Ref": "BaseVpc" }
+      "VpcId": { "Ref": "Vpc" }
     }
   },
 
-  "BaseRoutes": {
+  "Routes": {
     "Type": "AWS::EC2::RouteTable",
     "Properties": {
-      "VpcId": { "Ref": "BaseVpc" }
+      "VpcId": { "Ref": "Vpc" }
     }
   },
-  "BaseRouteDefault": {
+  "RouteDefault": {
     "Type": "AWS::EC2::Route",
     "Properties": {
       "DestinationCidrBlock": "0.0.0.0/0",
-      "GatewayId": { "Ref": "BaseGateway" },
-      "RouteTableId": { "Ref": "BaseRoutes" }
+      "GatewayId": { "Ref": "Gateway" },
+      "RouteTableId": { "Ref": "Routes" }
     }
   },
-  "BaseSubnet0Routes": {
+  "Subnet0Routes": {
     "Type": "AWS::EC2::SubnetRouteTableAssociation",
     "Properties": {
-      "SubnetId": { "Ref": "BaseSubnet0" },
-      "RouteTableId": { "Ref": "BaseRoutes" }
+      "SubnetId": { "Ref": "Subnet0" },
+      "RouteTableId": { "Ref": "Routes" }
     }
   },
-  "BaseSubnet1Routes": {
+  "Subnet1Routes": {
     "Type": "AWS::EC2::SubnetRouteTableAssociation",
     "Properties": {
-      "SubnetId": { "Ref": "BaseSubnet1" },
-      "RouteTableId": { "Ref": "BaseRoutes" }
+      "SubnetId": { "Ref": "Subnet1" },
+      "RouteTableId": { "Ref": "Routes" }
     }
   },
-  "BaseSubnet2Routes": {
+  "Subnet2Routes": {
     "Type": "AWS::EC2::SubnetRouteTableAssociation",
     "Properties": {
-      "SubnetId": { "Ref": "BaseSubnet2" },
-      "RouteTableId": { "Ref": "BaseRoutes" }
+      "SubnetId": { "Ref": "Subnet2" },
+      "RouteTableId": { "Ref": "Routes" }
     }
   },
 
-  "BaseSecurityGroup": {
+  "SecurityGroup": {
     "Type": "AWS::EC2::SecurityGroup",
     "Properties": {
       "GroupDescription": "Instances",
@@ -179,13 +179,13 @@
         { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Ref": "AllowSSHFrom" } },
         { "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535", "CidrIp": "10.0.0.0/8" }
       ],
-      "VpcId": { "Ref": "BaseVpc" }
+      "VpcId": { "Ref": "Vpc" }
     }
   },
 {{ end }}
 
 {{ define "app-infrastructure" }}
-  "BaseSettings": {
+  "Settings": {
     "Type": "AWS::S3::Bucket",
     "Properties": {
       "AccessControl": "Private",
@@ -199,7 +199,7 @@
     }
   },
       
-  "BaseDynamoBuilds": {
+  "DynamoBuilds": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
       "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "builds" ] ] },
@@ -231,7 +231,7 @@
       }
     }
   },
-  "BaseDynamoEnv": {
+  "DynamoEnv": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
       "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "env" ] ] },
@@ -247,7 +247,7 @@
       }
     }
   },
-  "BaseDynamoChanges": {
+  "DynamoChanges": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
       "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "changes" ] ] },
@@ -265,7 +265,7 @@
       }
     }
   },
-  "BaseDynamoProcesses": {
+  "DynamoProcesses": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
       "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "processes" ] ] },
@@ -281,7 +281,7 @@
       }
     }
   },
-  "BaseDynamoReleases": {
+  "DynamoReleases": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
       "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "releases" ] ] },
@@ -313,7 +313,7 @@
       }
     }
   },
-  "BaseDynamoServices": {
+  "DynamoServices": {
     "Type": "AWS::DynamoDB::Table",
     "Properties": {
       "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "services" ] ] },
@@ -363,7 +363,7 @@
       "InstanceMonitoring": true,
       "InstanceType": { "Ref": "{{ upper .Name }}Size" },
       "KeyName": { "Fn::If": [ "BlankSSHKey", { "Ref": "AWS::NoValue" }, { "Ref": "SSHKey" } ] },
-      "SecurityGroups": [ { "Ref": "BaseSecurityGroup" } ],
+      "SecurityGroups": [ { "Ref": "SecurityGroup" } ],
       "UserData": {{ template "userdata" . }}
     }
   },
@@ -377,9 +377,9 @@
         { "Fn::Select": [ 2, { "Fn::GetAZs": "" } ] }
       ],
       "VPCZoneIdentifier": [ 
-        { "Ref": "BaseSubnet0" },
-        { "Ref": "BaseSubnet1" },
-        { "Ref": "BaseSubnet2" }
+        { "Ref": "Subnet0" },
+        { "Ref": "Subnet1" },
+        { "Ref": "Subnet2" }
       ],
       "Cooldown": 5,
       "DesiredCapacity": { "Ref": "{{ upper .Name }}Scale" },
@@ -416,16 +416,16 @@
       "SecurityGroupIngress": [
         { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0" }
       ],
-      "VpcId": { "Ref": "BaseVpc" }
+      "VpcId": { "Ref": "Vpc" }
     }
   },
   "{{ upper .Name }}Balancer": {
     "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
     "Properties": {
       "Subnets": [
-        { "Ref": "BaseSubnet0" },
-        { "Ref": "BaseSubnet1" },
-        { "Ref": "BaseSubnet2" }
+        { "Ref": "Subnet0" },
+        { "Ref": "Subnet1" },
+        { "Ref": "Subnet2" }
       ],
       "ConnectionDrainingPolicy": { "Enabled": true, "Timeout": 60 },
       "ConnectionSettings": { "IdleTimeout": 60 },
@@ -512,7 +512,7 @@
         { "Fn::Join": [ "", [ "  \"env\": \"", { "Ref": "Environment" }, "\"," ] ] },
         "  \"logs\": {",
         { "Fn::Join": [ "", [ "    \"kinesis\": \"", { "Ref": "{{ upper .Name }}Kinesis" }, "\"," ] ] },
-        { "Fn::Join": [ "", [ "    \"cloudwatch\": \"", { "Ref": "BaseLogGroup" }, "\"" ] ] },
+        { "Fn::Join": [ "", [ "    \"cloudwatch\": \"", { "Ref": "LogGroup" }, "\"" ] ] },
         "  },",
         "  \"ports\": [",
         { "Fn::Join": [ "", [ "    \"", { "Fn::Join": [ "\",\n    \"", { "Ref": "{{ upper .Name }}Ports" } ] }, "\"" ] ] },
