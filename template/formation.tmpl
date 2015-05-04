@@ -72,12 +72,11 @@
       {{ template "app-infrastructure" . }}
     },
     "Outputs": {
+      {{ range .Processes }} {{ template "process-output" . }} {{ end }}
+
       "Processes": {
         "Value": "{{ processNames .Processes }}"
       },
-
-      {{ range .Processes }} {{ template "process-output" . }} {{ end }} 
-
       "SecurityGroup": {
         "Value": { "Ref": "SecurityGroup" }
       },
