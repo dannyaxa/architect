@@ -476,7 +476,7 @@
         "  ],",
         "  \"signal\": {",
         { "Fn::Join": [ "", [ "    \"stack\": \"", { "Ref": "AWS::StackName" }, "\"," ] ] },
-        { "Fn::Join": [ "", [ "    \"resource\": \"", { "Ref": "{{ upper .Name }}Instances" }, "\"" ] ] },
+        "    \"resource\": \"{{ upper .Name }}Instances\"",
         "  },",
         "}"
       ] ]
