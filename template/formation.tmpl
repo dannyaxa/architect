@@ -8,11 +8,6 @@
           "Default" : "",
           "Description" : "Override the default command for the {{ .Name }} process"
         },
-        "{{ upper .Name }}Ports": {
-          "Type" : "CommaDelimitedList",
-          "Default" : "",
-          "Description" : "Port mappings for {{ .Name }} process"
-        },
         "{{ upper .Name }}Scale": {
           "Type" : "Number",
           "Default" : "1",
@@ -23,6 +18,18 @@
           "Default" : "t2.micro",
           "Description" : "Size of instance to use for {{ .Name }} processes"
         },
+        {{ if .Balancer }}
+          "{{ upper .Name }}Check": {
+            "Type" : "String",
+            "Default" : "/check",
+            "Description" : "Healthcheck URL for the {{ .Name }} process"
+          },
+          "{{ upper .Name }}Port": {
+            "Type" : "String",
+            "Default" : "",
+            "Description" : "Listen port for the {{ .Name }} process"
+          },
+        {{ end }}
       {{ end }}
       "AMI": {
         "Type" : "String",
@@ -389,7 +396,7 @@
       "HealthCheck": {
         "HealthyThreshold": "2",
         "Interval": 5,
-        "Target": "HTTP:3000/",
+        "Target": { "Fn::Join": [ "", [ "HTTP:3000", { "Ref": "{{ upper .Name }}Check" } ] ] },
         "Timeout": 3,
         "UnhealthyThreshold": "2"
       },
@@ -471,7 +478,9 @@
         { "Fn::Join": [ "", [ "    \"cloudwatch\": \"", { "Ref": "LogGroup" }, "\"" ] ] },
         "  },",
         "  \"ports\": [",
-        { "Fn::Join": [ "", [ "    \"", { "Fn::Join": [ "\",\n    \"", { "Ref": "{{ upper .Name }}Ports" } ] }, "\"" ] ] },
+        {{ if .Balancer }}
+          { "Fn::Join": [ "", [ "    \"3000:", { "Ref": "{{ upper .Name }}Port" }, "\"" ] ] },
+        {{ end }}
         "  ],",
         "  \"services\": [",
         "    \"RUNTIME=convox\"",
