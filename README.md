@@ -20,12 +20,18 @@ The resulting stack will expect the following parameters:
 
 The stack will also expect these parameters for each process type:
 
-| Name                | Description                                   |
-|---------------------|-----------------------------------------------|
-| `WebCommand`        | Override the default command for this process |
-| `WebPorts`          | Port mappings for this process                |
-| `WebScale`          | Number of instances of this process to run    |
-| `WebSize`           | Size of instance to run for process           |
+| Name         | Description                                   |
+|--------------|-----------------------------------------------|
+| `WebCommand` | Override the default command for this process |
+| `WebScale`   | Number of instances of this process to run    |
+| `WebSize`    | Size of instance to run for process           |
+
+And these additional parameters for any process behind a balancer:
+
+| Name       | Description                      |
+|------------|----------------------------------|
+| `WebCheck` | Healthcheck URL for this process |
+| `WebPort`  | Listen port for this process     |
 
 ## See Also
 
