@@ -471,6 +471,9 @@
         "{",
         { "Fn::Join": [ "", [ "  \"app\": \"", { "Ref": "AWS::StackName" }, "\"," ] ] },
         "  \"process\": \"{{ .Name }}\",",
+        {{ if .Balancer }}
+          { "Fn::Join": [ "", [ "  \"check\": \"", { "Ref": "{{ upper .Name }}Check" }, "\"," ] ] },
+        {{ end }}
         { "Fn::Join": [ "", [ "  \"command\": \"", { "Ref": "{{ upper .Name }}Command" }, "\"," ] ] },
         { "Fn::Join": [ "", [ "  \"env\": \"", { "Ref": "Environment" }, "\"," ] ] },
         "  \"logs\": {",
