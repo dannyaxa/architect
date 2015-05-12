@@ -46,6 +46,11 @@
         "Default" : "",
         "Description" : "Environment URL"
       },
+      "Key" : {
+        "Type" : "String",
+        "Default" : "",
+        "Description" : "KMS ARN used to encrypt the data found at Environment"
+      },
       "Release" : {
         "Type" : "String",
         "Default" : "",
@@ -476,6 +481,7 @@
         {{ end }}
         { "Fn::Join": [ "", [ "  \"command\": \"", { "Ref": "{{ upper .Name }}Command" }, "\"," ] ] },
         { "Fn::Join": [ "", [ "  \"env\": \"", { "Ref": "Environment" }, "\"," ] ] },
+        { "Fn::Join": [ "", [ "  \"key\": \"", { "Ref": "Key" }, "\"," ] ] },
         "  \"logs\": {",
         { "Fn::Join": [ "", [ "    \"kinesis\": \"", { "Ref": "{{ upper .Name }}Kinesis" }, "\"," ] ] },
         { "Fn::Join": [ "", [ "    \"cloudwatch\": \"", { "Ref": "LogGroup" }, "\"" ] ] },
