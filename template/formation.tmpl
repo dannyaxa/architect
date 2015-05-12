@@ -491,6 +491,7 @@
           { "Fn::Join": [ "", [ "    \"3000:", { "Ref": "{{ upper .Name }}Port" }, "\"" ] ] },
         {{ end }}
         "  ],",
+        { "Fn::Join": [ "", [ "  \"role\": \"", { "Ref": "{{ upper .Name }}IamRole" }, "\"," ] ] },
         "  \"services\": [",
         "    \"RUNTIME=convox\"",
         "  ],",
