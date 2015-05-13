@@ -457,7 +457,7 @@
               {
                 "Fn::If": [
                   "BlankKey",
-                  "AWS::NoValue",
+                  { "Ref": "AWS::NoValue" },
                   {
                     "Effect": "Allow",
                     "Action": [ "kms:Decrypt" ],
