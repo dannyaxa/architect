@@ -19,10 +19,15 @@
           "Description" : "Size of instance to use for {{ .Name }} processes"
         },
         {{ if .Balancer }}
-          "{{ upper .Name }}Check": {
+          "{{ upper .Name }}CheckPath": {
             "Type" : "String",
-            "Default" : "HTTP:3000/check",
-            "Description" : "Healthcheck URL for the {{ .Name }} process"
+            "Default" : "/check",
+            "Description" : "Healthcheck path for the {{ .Name }} process"
+          },
+          "{{ upper .Name }}CheckPort": {
+            "Type" : "String",
+            "Default" : "3000",
+            "Description" : "Healthcheck port for the {{ .Name }} process"
           },
           "{{ upper .Name }}Port": {
             "Type" : "String",
@@ -402,7 +407,7 @@
       "HealthCheck": {
         "HealthyThreshold": "2",
         "Interval": 5,
-        "Target": { "Ref": "{{ upper .Name }}Check" },
+        "Target": { "Fn::Join": [ "", [ "HTTP:4000", { "Ref": "{{ upper .Name }}CheckPath" } ] ] },
         "Timeout": 3,
         "UnhealthyThreshold": "2"
       },
@@ -489,7 +494,7 @@
         { "Fn::Join": [ "", [ "  \"app\": \"", { "Ref": "AWS::StackName" }, "\"," ] ] },
         "  \"process\": \"{{ .Name }}\",",
         {{ if .Balancer }}
-          { "Fn::Join": [ "", [ "  \"check\": \"", { "Ref": "{{ upper .Name }}Check" }, "\"," ] ] },
+          { "Fn::Join": [ "", [ "  \"check\": \"", { "Ref": "{{ upper .Name }}CheckPath" }, "\"," ] ] },
         {{ end }}
         { "Fn::Join": [ "", [ "  \"command\": \"", { "Ref": "{{ upper .Name }}Command" }, "\"," ] ] },
         { "Fn::Join": [ "", [ "  \"env\": \"", { "Ref": "Environment" }, "\"," ] ] },
@@ -501,6 +506,7 @@
         "  \"ports\": [",
         {{ if .Balancer }}
           { "Fn::Join": [ "", [ "    \"3000:", { "Ref": "{{ upper .Name }}Port" }, "\"" ] ] },
+          { "Fn::Join": [ "", [ "    \"4000:", { "Ref": "{{ upper .Name }}CheckPort" }, "\"" ] ] },
         {{ end }}
         "  ],",
         { "Fn::Join": [ "", [ "  \"role\": \"", { "Ref": "{{ upper .Name }}IamRole" }, "\"," ] ] },
