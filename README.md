@@ -15,6 +15,7 @@ The resulting stack will expect the following parameters:
 | `AMI`          | Application AMI. (See [convox/build](https://github.com/convox/build)) |
 | `AllowSSHFrom` | Allow SSH from this CIDR block                                         |
 | `Environment`  | URL to an  environment for this app (`.env` format)                    |
+| `Key`          | ARN for a KMS key used to encrypt `Environment`                        |
 | `SSHKey`       | Key name for SSH access                                                |
 
 The stack will also expect these parameters for each process type:
@@ -27,10 +28,11 @@ The stack will also expect these parameters for each process type:
 
 And these additional parameters for any process behind a balancer:
 
-| Name       | Description                      |
-|------------|----------------------------------|
-| `WebCheck` | Healthcheck URL for this process |
-| `WebPort`  | Listen port for this process     |
+| Name           | Description                       |
+|----------------|-----------------------------------|
+| `WebCheckPath` | Healthcheck path for this process |
+| `WebCheckPort` | Healthcheck port for this process |
+| `WebPort`      | Listen port for this process      |
 
 ## See Also
 
