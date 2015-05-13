@@ -505,7 +505,7 @@
         "  },",
         "  \"ports\": [",
         {{ if .Balancer }}
-          { "Fn::Join": [ "", [ "    \"3000:", { "Ref": "{{ upper .Name }}Port" }, "\"" ] ] },
+          { "Fn::Join": [ "", [ "    \"3000:", { "Ref": "{{ upper .Name }}Port" }, "\"," ] ] },
           { "Fn::Join": [ "", [ "    \"4000:", { "Ref": "{{ upper .Name }}CheckPort" }, "\"" ] ] },
         {{ end }}
         "  ],",
