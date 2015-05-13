@@ -21,7 +21,7 @@
         {{ if .Balancer }}
           "{{ upper .Name }}Check": {
             "Type" : "String",
-            "Default" : "/check",
+            "Default" : "HTTP:3000/check",
             "Description" : "Healthcheck URL for the {{ .Name }} process"
           },
           "{{ upper .Name }}Port": {
@@ -402,7 +402,7 @@
       "HealthCheck": {
         "HealthyThreshold": "2",
         "Interval": 5,
-        "Target": { "Fn::Join": [ "", [ "HTTP:3000", { "Ref": "{{ upper .Name }}Check" } ] ] },
+        "Target": { "Ref": "{{ upper .Name }}Check" },
         "Timeout": 3,
         "UnhealthyThreshold": "2"
       },
