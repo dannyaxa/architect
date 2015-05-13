@@ -67,6 +67,7 @@
       }
     },
     "Conditions": {
+      "BlankKey": { "Fn::Equals": [ { "Ref": "Key" }, "" ] },
       "BlankSSHKey": { "Fn::Equals": [ { "Ref": "SSHKey" }, "" ] }
     },
     "Resources": {
@@ -452,6 +453,17 @@
                 "Effect": "Allow",
                 "Action": [ "cloudwatch:PutMetricData" ],
                 "Resource": [ "*" ]
+              },
+              {
+                "Fn::If": [
+                  "BlankKey",
+                  "AWS::NoValue",
+                  {
+                    "Effect": "Allow",
+                    "Action": [ "kms:Decrypt" ],
+                    "Resource": [ { "Ref": "Key" } ]
+                  }
+                ]
               }
             ]
           }
