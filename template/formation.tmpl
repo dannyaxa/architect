@@ -368,6 +368,11 @@
           "Key": "Name",
           "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "{{ .Name }}" ] ] },
           "PropagateAtLaunch": true
+        },
+        {
+          "Key": "App",
+          "Value": { "Ref": "AWS::StackName" },
+          "PropagateAtLaunch": true
         }
       ]
     },
