@@ -21,7 +21,7 @@
         {{ if .Balancer }}
           "{{ upper .Name }}CheckPath": {
             "Type" : "String",
-            "Default" : "/check",
+            "Default" : "/",
             "Description" : "Healthcheck path for the {{ .Name }} process"
           },
           "{{ upper .Name }}CheckPort": {
