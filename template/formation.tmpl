@@ -521,7 +521,10 @@
         { "Fn::Join": [ "", [ "  \"app\": \"", { "Ref": "AWS::StackName" }, "\"," ] ] },
         "  \"process\": \"{{ .Name }}\",",
         {{ if .Balancer }}
-          { "Fn::Join": [ "", [ "  \"check\": \"", { "Ref": "{{ upper .Name }}CheckPath" }, "\"," ] ] },
+        "  \"check\": {",
+        { "Fn::Join": [ "", [ "    \"path\": \"", { "Ref": "{{ upper .Name }}CheckPath" }, "\"," ] ] },
+        { "Fn::Join": [ "", [ "    \"port\": \"", { "Ref": "{{ upper .Name }}CheckPort" }, "\"" ] ] },
+        "  },",
         {{ end }}
         { "Fn::Join": [ "", [ "  \"command\": \"", { "Ref": "{{ upper .Name }}Command" }, "\"," ] ] },
         { "Fn::Join": [ "", [ "  \"env\": \"", { "Ref": "Environment" }, "\"," ] ] },
