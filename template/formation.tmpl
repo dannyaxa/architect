@@ -539,6 +539,7 @@
           { "Fn::Join": [ "", [ "    \"4000:", { "Ref": "{{ upper .Name }}CheckPort" }, "\"" ] ] },
         {{ end }}
         "  ],",
+        { "Fn::Join": [ "", [ "  \"region\": \"", { "Ref": "AWS::Region" }, "\"," ] ] },
         { "Fn::Join": [ "", [ "  \"role\": \"", { "Ref": "{{ upper .Name }}IamRole" }, "\"," ] ] },
         "  \"services\": [",
         "    \"RUNTIME=convox\"",
