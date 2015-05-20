@@ -2,554 +2,82 @@
   {
     "AWSTemplateFormatVersion" : "2010-09-09",
     "Parameters" : {
-      {{ range .Processes }}
-        "{{ upper .Name }}Command": {
+      {{ range .Balancers }}
+        "{{ upper .Name }}Check": {
           "Type" : "String",
-          "Default" : "",
-          "Description" : "Override the default command for the {{ .Name }} process"
+          "Default" : "HTTP:{{ upper .Port }}/",
+          "Description" : "Health check endpoint"
         },
-        "{{ upper .Name }}Scale": {
-          "Type" : "Number",
-          "Default" : "1",
-          "Description" : "Number of {{ .Name }} processes to run"
-        },
-        "{{ upper .Name }}Size": {
-          "Type" : "String",
-          "Default" : "t2.micro",
-          "Description" : "Size of instance to use for {{ .Name }} processes"
-        },
-        {{ if .Balancer }}
-          "{{ upper .Name }}CheckPath": {
-            "Type" : "String",
-            "Default" : "/",
-            "Description" : "Healthcheck path for the {{ .Name }} process"
-          },
-          "{{ upper .Name }}CheckPort": {
-            "Type" : "String",
-            "Default" : "3000",
-            "Description" : "Healthcheck port for the {{ .Name }} process"
-          },
-          "{{ upper .Name }}Port": {
-            "Type" : "String",
-            "Default" : "",
-            "Description" : "Listen port for the {{ .Name }} process"
-          },
-        {{ end }}
       {{ end }}
-      "AMI": {
-        "Type" : "String",
-        "Default" : "",
-        "Description" : "Application AMI"
-      },
-      "AllowSSHFrom": {
-        "Type" : "String",
-        "Default" : "0.0.0.0/0",
-        "Description" : "Allow SSH From (CIDR notation)"
-      },
-      "AvailabilityZones": {
-        "Type" : "CommaDelimitedList",
-        "Default" : "",
-        "Description" : "Override default availability zones"
-      },
-      "Environment" : {
-        "Type" : "String",
-        "Default" : "",
-        "Description" : "Environment URL"
-      },
-      "Key" : {
-        "Type" : "String",
-        "Default" : "",
-        "Description" : "KMS ARN used to encrypt the data found at Environment"
-      },
-      "Release" : {
-        "Type" : "String",
-        "Default" : "",
-        "Description" : "Current Release"
-      },
-      "Repository" : {
+      "Repository": {
         "Type" : "String",
         "Default" : "",
         "Description" : "Source code repository"
       },
-      "SSHKey": {
-        "Type": "String",
-        "Description" : "Key name for SSH access"
+      "Subnets": {
+        "Type" : "List<AWS::EC2::Subnet::Id>",
+        "Default" : "",
+        "Description" : "VPC subnets for this app"
+      },
+      "VPC": {
+        "Type" : "AWS::EC2::VPC::Id",
+        "Default" : "",
+        "Description" : "VPC for this app"
       }
     },
-    "Conditions": {
-      "BlankKey": { "Fn::Equals": [ { "Ref": "Key" }, "" ] },
-      "BlankSSHKey": { "Fn::Equals": [ { "Ref": "SSHKey" }, "" ] },
-      "DefaultAvailabilityZones": { "Fn::Equals": [ { "Fn::Join": [ "", { "Ref": "AvailabilityZones" } ] }, "" ] }
-    },
     "Resources": {
-      "LogGroup": {
-        "Type": "AWS::Logs::LogGroup",
+      {{ range .Balancers }}
+        "{{ upper .Name }}BalancerSecurityGroup": {
+          "Type": "AWS::EC2::SecurityGroup",
+          "Properties": {
+            "GroupDescription": { "Fn::Join": [ " ", [ { "Ref": "AWS::StackName" }, "-balancer" ] ] },
+            "SecurityGroupIngress": [
+              { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0" }
+            ],
+            "VpcId": { "Ref": "VPC" }
+          }
+        },
+        "{{ upper .Name }}Balancer": {
+          "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+          "Properties": {
+            "Subnets": { "Ref": "Subnets" },
+            "ConnectionDrainingPolicy": { "Enabled": true, "Timeout": 60 },
+            "ConnectionSettings": { "IdleTimeout": 60 },
+            "CrossZone": true,
+            "HealthCheck": {
+              "HealthyThreshold": "2",
+              "Interval": 5,
+              "Target": { "Ref": "{{ upper .Name }}Check" },
+              "Timeout": 3,
+              "UnhealthyThreshold": "2"
+            },
+            "Listeners": [
+              { "Protocol": "TCP", "LoadBalancerPort": "80", "InstanceProtocol": "TCP", "InstancePort": "{{ .Port }}" }
+            ],
+            "LBCookieStickinessPolicy": [{ "PolicyName": "affinity" }],
+            "LoadBalancerName": { "Ref": "AWS::StackName" },
+            "SecurityGroups": [ { "Ref": "{{ upper .Name }}BalancerSecurityGroup" } ]
+          }
+        },
+      {{ end }}
+      "Settings": {
+        "Type": "AWS::S3::Bucket",
         "Properties": {
-          "RetentionInDays": 7
+          "AccessControl": "Private",
+          "VersioningConfiguration": {
+            "Status": "Suspended"
+          },
+          "Tags": [
+            { "Key": "system", "Value": "convox" },
+            { "Key": "app", "Value": { "Ref": "AWS::StackName" } }
+          ]
         }
-      },
-
-      {{ template "app-network" . }}
-
-      {{ range .Processes }} {{ template "process" . }} {{ end }}
-
-      {{ template "app-infrastructure" . }}
+      }
     },
     "Outputs": {
-      {{ range .Processes }} {{ template "process-output" . }} {{ end }}
-
-      "Processes": {
-        "Value": "{{ processNames .Processes }}"
-      },
-      "SecurityGroup": {
-        "Value": { "Ref": "SecurityGroup" }
-      },
       "Settings": {
         "Value": { "Ref": "Settings" }
       }
-    }
-  }
-{{ end }}
-
-{{ define "app-network" }}
-  "Vpc": {
-    "Type": "AWS::EC2::VPC",
-    "Properties": {
-      "CidrBlock": "10.0.0.0/16",
-      "InstanceTenancy": "default",
-      "Tags": [
-        { "Key": "Name", "Value": { "Ref": "AWS::StackName" } }
-      ]
-    }
-  },
-
-  "Gateway": {
-    "Type": "AWS::EC2::InternetGateway",
-    "Properties": {
-    }
-  },
-  "GatewayAttachment": {
-    "Type": "AWS::EC2::VPCGatewayAttachment",
-    "Properties": {
-      "InternetGatewayId": { "Ref": "Gateway" },
-      "VpcId": { "Ref": "Vpc" }
-    }
-  },
-
-  "Subnet0": {
-    "Type": "AWS::EC2::Subnet",
-    "Properties": {
-      "AvailabilityZone": { "Fn::If": [ "DefaultAvailabilityZones",
-        { "Fn::Select": [ "0", { "Fn::GetAZs": "" } ] },
-        { "Fn::Select": [ "0", { "Ref": "AvailabilityZones" } ] }
-      ] },
-      "CidrBlock": "10.0.1.0/24",
-      "VpcId": { "Ref": "Vpc" }
-    }
-  },
-  "Subnet1": {
-    "Type": "AWS::EC2::Subnet",
-    "Properties": {
-      "AvailabilityZone": { "Fn::If": [ "DefaultAvailabilityZones",
-        { "Fn::Select": [ "1", { "Fn::GetAZs": "" } ] },
-        { "Fn::Select": [ "1", { "Ref": "AvailabilityZones" } ] }
-      ] },
-      "CidrBlock": "10.0.2.0/24",
-      "VpcId": { "Ref": "Vpc" }
-    }
-  },
-  "Subnet2": {
-    "Type": "AWS::EC2::Subnet",
-    "Properties": {
-      "AvailabilityZone": { "Fn::If": [ "DefaultAvailabilityZones",
-        { "Fn::Select": [ "2", { "Fn::GetAZs": "" } ] },
-        { "Fn::Select": [ "2", { "Ref": "AvailabilityZones" } ] }
-      ] },
-      "CidrBlock": "10.0.3.0/24",
-      "VpcId": { "Ref": "Vpc" }
-    }
-  },
-
-  "Routes": {
-    "Type": "AWS::EC2::RouteTable",
-    "Properties": {
-      "VpcId": { "Ref": "Vpc" }
-    }
-  },
-  "RouteDefault": {
-    "Type": "AWS::EC2::Route",
-    "Properties": {
-      "DestinationCidrBlock": "0.0.0.0/0",
-      "GatewayId": { "Ref": "Gateway" },
-      "RouteTableId": { "Ref": "Routes" }
-    }
-  },
-  "Subnet0Routes": {
-    "Type": "AWS::EC2::SubnetRouteTableAssociation",
-    "Properties": {
-      "SubnetId": { "Ref": "Subnet0" },
-      "RouteTableId": { "Ref": "Routes" }
-    }
-  },
-  "Subnet1Routes": {
-    "Type": "AWS::EC2::SubnetRouteTableAssociation",
-    "Properties": {
-      "SubnetId": { "Ref": "Subnet1" },
-      "RouteTableId": { "Ref": "Routes" }
-    }
-  },
-  "Subnet2Routes": {
-    "Type": "AWS::EC2::SubnetRouteTableAssociation",
-    "Properties": {
-      "SubnetId": { "Ref": "Subnet2" },
-      "RouteTableId": { "Ref": "Routes" }
-    }
-  },
-
-  "SecurityGroup": {
-    "Type": "AWS::EC2::SecurityGroup",
-    "Properties": {
-      "GroupDescription": "Instances",
-      "SecurityGroupIngress": [
-        { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Ref": "AllowSSHFrom" } },
-        { "IpProtocol": "tcp", "FromPort": "0", "ToPort": "65535", "CidrIp": "10.0.0.0/8" }
-      ],
-      "VpcId": { "Ref": "Vpc" }
-    }
-  },
-{{ end }}
-
-{{ define "app-infrastructure" }}
-  "Settings": {
-    "Type": "AWS::S3::Bucket",
-    "Properties": {
-      "AccessControl": "Private",
-      "VersioningConfiguration": {
-        "Status": "Suspended"
-      },
-      "Tags": [
-        { "Key": "system", "Value": "convox" },
-        { "Key": "app", "Value": { "Ref": "AWS::StackName" } }
-      ]
-    }
-  },
-      
-  "DynamoBuilds": {
-    "Type": "AWS::DynamoDB::Table",
-    "Properties": {
-      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "builds" ] ] },
-      "AttributeDefinitions": [
-        { "AttributeName": "id", "AttributeType": "S" },
-        { "AttributeName": "app", "AttributeType": "S" },
-        { "AttributeName": "created", "AttributeType": "S" }
-      ],
-      "KeySchema": [
-        { "AttributeName": "id", "KeyType": "HASH" }
-      ],
-      "GlobalSecondaryIndexes": [{
-        "IndexName": "app.created",
-        "KeySchema": [
-          { "AttributeName": "app", "KeyType": "HASH" },
-          { "AttributeName": "created", "KeyType": "RANGE" }
-        ],
-        "Projection": {
-          "ProjectionType": "ALL"
-        },
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "5",
-          "WriteCapacityUnits": "5"
-        }
-      }],
-      "ProvisionedThroughput": {
-        "ReadCapacityUnits": "5",
-        "WriteCapacityUnits": "5"
-      }
-    }
-  },
-  "DynamoChanges": {
-    "Type": "AWS::DynamoDB::Table",
-    "Properties": {
-      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "changes" ] ] },
-      "AttributeDefinitions": [
-        { "AttributeName": "app", "AttributeType": "S" },
-        { "AttributeName": "created", "AttributeType": "S" }
-      ],
-      "KeySchema": [
-        { "AttributeName": "app", "KeyType": "HASH" },
-        { "AttributeName": "created", "KeyType": "RANGE" }
-      ],
-      "ProvisionedThroughput": {
-        "ReadCapacityUnits": "5",
-        "WriteCapacityUnits": "5"
-      }
-    }
-  },
-  "DynamoReleases": {
-    "Type": "AWS::DynamoDB::Table",
-    "Properties": {
-      "TableName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "releases" ] ] },
-      "AttributeDefinitions": [
-        { "AttributeName": "id", "AttributeType": "S" },
-        { "AttributeName": "app", "AttributeType": "S" },
-        { "AttributeName": "created", "AttributeType": "S" }
-      ],
-      "KeySchema": [
-        { "AttributeName": "id", "KeyType": "HASH" }
-      ],
-      "GlobalSecondaryIndexes": [{
-        "IndexName": "app.created",
-        "KeySchema": [
-          { "AttributeName": "app", "KeyType": "HASH" },
-          { "AttributeName": "created", "KeyType": "RANGE" }
-        ],
-        "Projection": {
-          "ProjectionType": "ALL"
-        },
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": "5",
-          "WriteCapacityUnits": "5"
-        }
-      }],
-      "ProvisionedThroughput": {
-        "ReadCapacityUnits": "5",
-        "WriteCapacityUnits": "5"
-      }
-    }
-  }
-{{ end }}
-
-{{ define "process" }}
-  {{ if .Balancer }} {{ template "process-balancer" . }} {{ end }}
-
-  "{{ upper .Name }}Kinesis": {
-    "Type": "AWS::Kinesis::Stream",
-    "Properties": {
-      "ShardCount": 1
-    }
-  },
-
-  {{ template "process-iamrole" . }}
-
-  "{{ upper .Name }}InstanceProfile": {
-    "Type": "AWS::IAM::InstanceProfile",
-    "Properties": {
-      "Path": "/",
-      "Roles": [ { "Ref": "{{ upper .Name }}IamRole" } ]
-    }
-  },
-  "{{ upper .Name }}LaunchConfiguration": {
-    "Type": "AWS::AutoScaling::LaunchConfiguration",
-    "Properties": {
-      "AssociatePublicIpAddress": true,
-      "BlockDeviceMappings": [ 
-        { "DeviceName": "/dev/sda1", "Ebs": { "VolumeSize": "10", "VolumeType": "standard" } }
-      ],
-      "EbsOptimized": false,
-      "IamInstanceProfile": { "Ref": "{{ upper .Name }}InstanceProfile" },
-      "ImageId": { "Ref": "AMI" },
-      "InstanceMonitoring": true,
-      "InstanceType": { "Ref": "{{ upper .Name }}Size" },
-      "KeyName": { "Fn::If": [ "BlankSSHKey", { "Ref": "AWS::NoValue" }, { "Ref": "SSHKey" } ] },
-      "SecurityGroups": [ { "Ref": "SecurityGroup" } ],
-      "UserData": {{ template "userdata" . }}
-    }
-  },
-  "{{ upper .Name }}Instances": {
-    "Type": "AWS::AutoScaling::AutoScalingGroup",
-    "Properties" : {
-      "LaunchConfigurationName" : { "Ref": "{{ upper .Name }}LaunchConfiguration" },
-      "AvailabilityZones": { "Fn::If": [ "DefaultAvailabilityZones",
-        [
-          { "Fn::Select": [ 0, { "Fn::GetAZs": "" } ] },
-          { "Fn::Select": [ 1, { "Fn::GetAZs": "" } ] },
-          { "Fn::Select": [ 2, { "Fn::GetAZs": "" } ] }
-        ],
-        [
-          { "Fn::Select": [ 0, { "Ref": "AvailabilityZones" } ] },
-          { "Fn::Select": [ 1, { "Ref": "AvailabilityZones" } ] },
-          { "Fn::Select": [ 2, { "Ref": "AvailabilityZones" } ] }
-        ]
-      ] },
-      "VPCZoneIdentifier": [ 
-        { "Ref": "Subnet0" },
-        { "Ref": "Subnet1" },
-        { "Ref": "Subnet2" }
-      ],
-      "Cooldown": 5,
-      "DesiredCapacity": { "Ref": "{{ upper .Name }}Scale" },
-      "MinSize" : "1",
-      "MaxSize" : "10",
-      {{ if .Balancer }}
-        "LoadBalancerNames": [ { "Ref": "{{ upper .Name }}Balancer" } ],
-      {{ end }}
-      "HealthCheckType": "EC2",
-      "HealthCheckGracePeriod": 30,
-      "MetricsCollection": [ { "Granularity": "1Minute" } ],
-      "Tags": [
-        {
-          "Key": "Name",
-          "Value": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "{{ .Name }}" ] ] },
-          "PropagateAtLaunch": true
-        },
-        {
-          "Key": "App",
-          "Value": { "Ref": "AWS::StackName" },
-          "PropagateAtLaunch": true
-        }
-      ]
-    },
-    "UpdatePolicy": {
-      "AutoScalingRollingUpdate": {
-        "MaxBatchSize": 1,
-        "MinInstancesInService": 1,
-        "PauseTime": "PT2M",
-        "WaitOnResourceSignals": "true"
-      }
-    }
-  },
-{{ end }}
-
-{{ define "process-balancer" }}
-  "{{ upper .Name }}BalancerSecurityGroup": {
-    "Type": "AWS::EC2::SecurityGroup",
-    "Properties": {
-      "GroupDescription": "{{ .Name }} Balancer",
-      "SecurityGroupIngress": [
-        { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0" }
-      ],
-      "VpcId": { "Ref": "Vpc" }
-    }
-  },
-  "{{ upper .Name }}Balancer": {
-    "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-    "Properties": {
-      "Subnets": [
-        { "Ref": "Subnet0" },
-        { "Ref": "Subnet1" },
-        { "Ref": "Subnet2" }
-      ],
-      "ConnectionDrainingPolicy": { "Enabled": true, "Timeout": 60 },
-      "ConnectionSettings": { "IdleTimeout": 60 },
-      "CrossZone": true,
-      "HealthCheck": {
-        "HealthyThreshold": "2",
-        "Interval": 5,
-        "Target": { "Fn::Join": [ "", [ "HTTP:4000", { "Ref": "{{ upper .Name }}CheckPath" } ] ] },
-        "Timeout": 3,
-        "UnhealthyThreshold": "2"
-      },
-      "LBCookieStickinessPolicy": [{ "PolicyName": "affinity" }],
-      "LoadBalancerName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "{{ .Name }}" ] ] },
-      "Listeners": [
-        { "Protocol": "TCP", "LoadBalancerPort": "80", "InstanceProtocol": "TCP", "InstancePort": "3000" }
-      ],
-      "SecurityGroups": [ { "Ref": "{{ upper .Name }}BalancerSecurityGroup" } ]
-    }
-  },
-{{ end }}
-
-{{ define "process-iamrole" }}
-  "{{ upper .Name }}IamRole": {
-    "Type": "AWS::IAM::Role",
-    "Properties": {
-      "AssumeRolePolicyDocument": {
-        "Version": "2012-10-17",
-        "Statement": [
-          {
-            "Effect": "Allow",
-            "Principal": {
-              "Service": [ "ec2.amazonaws.com" ]
-            },
-            "Action": [ "sts:AssumeRole" ]
-          }
-        ]
-      },
-      "Path": "/",
-      "Policies": [
-        {
-          "PolicyName": "{{ upper .Name }}Role",
-          "PolicyDocument": {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Effect": "Allow",
-                "Action": [ "logs:*" ],
-                "Resource": [ "arn:aws:logs:*:*:*" ]
-              },
-              {
-                "Effect": "Allow",
-                "Action": [ "kinesis:PutRecords" ],
-                "Resource": [ { "Fn::Join": [ "", [ "arn:aws:kinesis:*:*:stream/", { "Ref": "AWS::StackName" }, "-*" ] ] } ]
-              },
-              {
-                "Effect": "Allow",
-                "Action": [ "cloudwatch:PutMetricData" ],
-                "Resource": [ "*" ]
-              },
-              {
-                "Fn::If": [
-                  "BlankKey",
-                  { "Ref": "AWS::NoValue" },
-                  {
-                    "Effect": "Allow",
-                    "Action": [ "kms:Decrypt" ],
-                    "Resource": [ { "Ref": "Key" } ]
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    }
-  },
-{{ end }}
-
-{{ define "process-output" }}
-  {{ if .Balancer }}
-    "{{ upper .Name }}BalancerHost": {
-      "Value": { "Fn::GetAtt": [ "{{ upper .Name }}Balancer", "DNSName" ] }
-    },
-  {{ end }}
-{{ end }}
-
-{{ define "userdata" }}
-  {
-    "Fn::Base64": {
-      "Fn::Join": [ "\n", [
-        "{",
-        { "Fn::Join": [ "", [ "  \"app\": \"", { "Ref": "AWS::StackName" }, "\"," ] ] },
-        "  \"process\": \"{{ .Name }}\",",
-        {{ if .Balancer }}
-        "  \"check\": {",
-        { "Fn::Join": [ "", [ "    \"path\": \"", { "Ref": "{{ upper .Name }}CheckPath" }, "\"," ] ] },
-        { "Fn::Join": [ "", [ "    \"port\": \"", { "Ref": "{{ upper .Name }}CheckPort" }, "\"" ] ] },
-        "  },",
-        {{ end }}
-        { "Fn::Join": [ "", [ "  \"command\": \"", { "Ref": "{{ upper .Name }}Command" }, "\"," ] ] },
-        { "Fn::Join": [ "", [ "  \"env\": \"", { "Ref": "Environment" }, "\"," ] ] },
-        { "Fn::Join": [ "", [ "  \"key\": \"", { "Ref": "Key" }, "\"," ] ] },
-        "  \"logs\": {",
-        { "Fn::Join": [ "", [ "    \"kinesis\": \"", { "Ref": "{{ upper .Name }}Kinesis" }, "\"," ] ] },
-        { "Fn::Join": [ "", [ "    \"cloudwatch\": \"", { "Ref": "LogGroup" }, "\"" ] ] },
-        "  },",
-        "  \"ports\": [",
-        {{ if .Balancer }}
-          { "Fn::Join": [ "", [ "    \"3000:", { "Ref": "{{ upper .Name }}Port" }, "\"," ] ] },
-          { "Fn::Join": [ "", [ "    \"4000:", { "Ref": "{{ upper .Name }}CheckPort" }, "\"" ] ] },
-        {{ end }}
-        "  ],",
-        { "Fn::Join": [ "", [ "  \"region\": \"", { "Ref": "AWS::Region" }, "\"," ] ] },
-        { "Fn::Join": [ "", [ "  \"role\": \"", { "Ref": "{{ upper .Name }}IamRole" }, "\"," ] ] },
-        "  \"services\": [",
-        "    \"RUNTIME=convox\"",
-        "  ],",
-        "  \"signal\": {",
-        { "Fn::Join": [ "", [ "    \"stack\": \"", { "Ref": "AWS::StackName" }, "\"," ] ] },
-        "    \"resource\": \"{{ upper .Name }}Instances\"",
-        "  }",
-        "}"
-      ] ]
     }
   }
 {{ end }}

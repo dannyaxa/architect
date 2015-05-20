@@ -12,18 +12,21 @@ import (
 
 var (
 	flagBalancers string
-	flagProcesses string
 )
 
 func init() {
 	flag.StringVar(&flagBalancers, "balancers", "", "processes that need a load balancer frontend")
-	flag.StringVar(&flagProcesses, "processes", "", "processes associated with the app")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "architect: create a cloudformation stack for a convox application\n\nUsage:\n")
 		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nExample:\n  architect -processes web,worker -balancers web >formation.json\n")
+		fmt.Fprintf(os.Stderr, "\nExample:\n  architect -balancers web:3000,admin:4000 > formation.json\n")
 	}
+}
+
+type Balancer struct {
+	Name string
+	Port string
 }
 
 func main() {
@@ -31,7 +34,7 @@ func main() {
 
 	params := map[string]interface{}{
 		"App":       nil,
-		"Processes": buildProcesses(parseList(flagProcesses), parseList(flagBalancers)),
+		"Balancers": parseBalancers(flagBalancers),
 	}
 
 	data, err := buildTemplate("formation", "app", params)
@@ -89,6 +92,25 @@ func displaySyntaxError(data string, err error) {
 
 	fmt.Printf("Error in line %d: %s \n", line, err)
 	fmt.Printf("%s\n%s^\n", data[start:end], strings.Repeat(" ", pos))
+}
+
+func parseBalancers(s string) []Balancer {
+	list := parseList(s)
+
+	b := make([]Balancer, len(list))
+
+	for i, l := range list {
+		parts := strings.SplitN(l, ":", 2)
+
+		if len(parts) != 2 {
+			fmt.Fprintf(os.Stderr, "balancers must be name:port pairs\n")
+			os.Exit(1)
+		}
+
+		b[i] = Balancer{Name: parts[0], Port: parts[1]}
+	}
+
+	return b
 }
 
 func parseList(list string) []string {
@@ -152,15 +174,6 @@ func templateHelpers() template.FuncMap {
 			}
 			return template.HTML(strings.Join(as, ","))
 		},
-		"processNames": func(pp []Process) string {
-			names := make([]string, len(pp))
-
-			for i, p := range pp {
-				names[i] = p.Name
-			}
-
-			return strings.Join(names, ",")
-		},
 		"safe": func(s string) template.HTML {
 			return template.HTML(s)
 		},
@@ -190,15 +203,4 @@ func templateHelpers() template.FuncMap {
 			return us
 		},
 	}
-}
-
-type StringSet []string
-
-func (ss *StringSet) Set(value string) error {
-	*ss = append(*ss, value)
-	return nil
-}
-
-func (ss *StringSet) String() string {
-	return fmt.Sprintf("[%s]", strings.Join(*ss, ","))
 }
